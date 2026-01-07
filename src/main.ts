@@ -3,9 +3,12 @@ import { AnyFileSettings } from "./types";
 import { DEFAULT_MAPPINGS, OBSIDIAN_HANDLED_EXTENSIONS } from "./defaults";
 import { AnyFileSettingTab } from "./settings";
 
+const CURRENT_SETTINGS_VERSION = 2;
+
 const DEFAULT_SETTINGS: AnyFileSettings = {
   mappings: { ...DEFAULT_MAPPINGS },
   obsidianDefaults: [...OBSIDIAN_HANDLED_EXTENSIONS],
+  settingsVersion: CURRENT_SETTINGS_VERSION,
 };
 
 export default class AnyFilePlugin extends Plugin {
@@ -25,7 +28,19 @@ export default class AnyFilePlugin extends Plugin {
 
   async loadSettings() {
     const loaded = await this.loadData();
-    this.settings = Object.assign({}, DEFAULT_SETTINGS, loaded);
+    if (loaded) {
+      this.settings = {
+        mappings: { ...DEFAULT_SETTINGS.mappings, ...loaded.mappings },
+        obsidianDefaults: loaded.obsidianDefaults ?? [...DEFAULT_SETTINGS.obsidianDefaults],
+        settingsVersion: CURRENT_SETTINGS_VERSION,
+      };
+    } else {
+      this.settings = {
+        mappings: { ...DEFAULT_SETTINGS.mappings },
+        obsidianDefaults: [...DEFAULT_SETTINGS.obsidianDefaults],
+        settingsVersion: CURRENT_SETTINGS_VERSION,
+      };
+    }
   }
 
   async saveSettings() {
@@ -56,7 +71,10 @@ export default class AnyFilePlugin extends Plugin {
   unregisterAllExtensions() {
     for (const ext of this.registeredExtensions) {
       try {
-        // @ts-expect-error - private API, no public unregister method
+        // @ts-expect-error - obsidian's public API has registerExtensions() but no
+        // corresponding unregister. viewRegistry.unregisterExtensions() exists on the
+        // internal ViewRegistry class. without this, extensions stay registered until
+        // obsidian restarts, breaking the refresh-on-settings-change flow.
         this.app.viewRegistry.unregisterExtensions([ext]);
       } catch (e) {
         console.warn(`any-file: failed to unregister .${ext}`);

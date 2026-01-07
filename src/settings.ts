@@ -202,7 +202,7 @@ export class AnyFileSettingTab extends PluginSettingTab {
     return value
       .split(/[,\s]+/)
       .map((s) => s.toLowerCase().replace(/^\./, "").trim())
-      .filter((s) => s.length > 0);
+      .filter((s) => s.length > 0 && /^[a-z0-9]+$/.test(s));
   }
 
   private parseAndValidate(
@@ -212,10 +212,18 @@ export class AnyFileSettingTab extends PluginSettingTab {
     const extensions: string[] = [];
     const errors: string[] = [];
 
-    const raw = this.parseExtensionList(value);
+    const rawTokens = value
+      .split(/[,\s]+/)
+      .map((s) => s.toLowerCase().replace(/^\./, "").trim())
+      .filter((s) => s.length > 0);
     const seen = new Set<string>();
 
-    for (const ext of raw) {
+    for (const ext of rawTokens) {
+      if (!/^[a-z0-9]+$/.test(ext)) {
+        errors.push(`.${ext} contains invalid characters (only a-z, 0-9 allowed)`);
+        continue;
+      }
+
       if (seen.has(ext)) {
         errors.push(`duplicate: .${ext}`);
         continue;
