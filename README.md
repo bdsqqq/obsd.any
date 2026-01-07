@@ -39,7 +39,7 @@ note: obsidian natively handles `.txt`, `.js`, `.ts`, `.jsx`, `.tsx`, `.json`, `
 |--------|-------------|
 | per-view-type extension lists | text inputs for each available view type (markdown, image, audio, video, pdf, canvas). edit comma-separated extensions directly. |
 | reset to defaults | restore all mappings to defaults |
-| use obsidian's native behavior | defer to obsidian for extensions it already handles (`.txt`, `.js`, `.ts`, etc.). when enabled, the plugin skips registering these. |
+| use obsidian's native behavior | defer to obsidian for extensions it already handles (`.txt`, `.js`, `.ts`, etc.). the plugin skips registering these by default. |
 
 ## api notes
 
