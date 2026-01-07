@@ -9,7 +9,7 @@ maps file extensions to obsidian's built-in views (markdown, image, audio, video
 ## features
 
 - **65 default mappings** for common file types (code, configs, text, media)
-- **settings UI** with per-extension view type dropdown
+- **settings UI** with per-view-type extension lists
 - **dynamic view discovery** - works with views from other plugins too
 - **protected extensions** - warns before overriding .md, .canvas, etc.
 - **clean unload** - properly unregisters when disabled
