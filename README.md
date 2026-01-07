@@ -1,6 +1,6 @@
 # .any
 
-map any file extension to the appropriate obsidian view.
+map any file extension to any view.
 
 ## what it does
 
