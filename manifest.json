@@ -1,0 +1,10 @@
+{
+  "id": "dot-any",
+  "name": ".any",
+  "version": "1.0.0",
+  "minAppVersion": "1.0.0",
+  "description": "Map any file extension to the appropriate Obsidian view.",
+  "author": "bdsqqq",
+  "authorUrl": "https://github.com/bdsqqq",
+  "isDesktopOnly": false
+}

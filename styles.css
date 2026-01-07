@@ -1,0 +1,60 @@
+.any-file-settings {
+  max-width: 600px;
+}
+
+.any-file-table-container {
+  margin-bottom: 1em;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.any-file-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.any-file-table th,
+.any-file-table td {
+  padding: 6px 8px;
+  text-align: left;
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.any-file-table th {
+  font-weight: 600;
+  position: sticky;
+  top: 0;
+  background: var(--background-primary);
+}
+
+.any-file-ext-input {
+  width: 100%;
+  max-width: 120px;
+}
+
+.any-file-view-select {
+  width: 100%;
+  max-width: 150px;
+}
+
+.any-file-delete-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 1.2em;
+  padding: 2px 8px;
+}
+
+.any-file-delete-btn:hover {
+  color: var(--text-error);
+}
+
+.any-file-errors {
+  color: var(--text-error);
+  font-size: 0.9em;
+}
+
+.any-file-errors li {
+  margin-bottom: 4px;
+}

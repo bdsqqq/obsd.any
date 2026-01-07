@@ -1,0 +1,12 @@
+node_modules/
+main.js
+*.js.map
+
+# obsidian test vault
+.obsidian/
+
+# research (internal)
+research/
+
+# agent context (internal)
+.agent-context.md

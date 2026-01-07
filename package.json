@@ -1,0 +1,19 @@
+{
+  "name": "obsd-dot-any",
+  "version": "1.0.0",
+  "description": "Map any file extension to the appropriate Obsidian view.",
+  "main": "main.js",
+  "scripts": {
+    "dev": "node esbuild.config.mjs",
+    "build": "node esbuild.config.mjs production"
+  },
+  "keywords": ["obsidian", "plugin"],
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^18.0.0",
+    "builtin-modules": "^3.3.0",
+    "esbuild": "^0.21.0",
+    "obsidian": "^1.6.0",
+    "typescript": "^5.4.0"
+  }
+}
