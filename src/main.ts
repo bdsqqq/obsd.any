@@ -1,11 +1,11 @@
 import { Plugin } from "obsidian";
 import { AnyFileSettings } from "./types";
-import { DEFAULT_MAPPINGS } from "./defaults";
+import { DEFAULT_MAPPINGS, OBSIDIAN_HANDLED_EXTENSIONS } from "./defaults";
 import { AnyFileSettingTab } from "./settings";
 
 const DEFAULT_SETTINGS: AnyFileSettings = {
   mappings: { ...DEFAULT_MAPPINGS },
-  protectDefaults: true,
+  obsidianDefaults: [...OBSIDIAN_HANDLED_EXTENSIONS],
 };
 
 export default class AnyFilePlugin extends Plugin {
@@ -34,6 +34,9 @@ export default class AnyFilePlugin extends Plugin {
 
   registerAllExtensions() {
     for (const [ext, viewType] of Object.entries(this.settings.mappings)) {
+      if (this.settings.obsidianDefaults.includes(ext)) {
+        continue;
+      }
       this.registerSingleExtension(ext, viewType);
     }
   }
@@ -62,12 +65,9 @@ export default class AnyFilePlugin extends Plugin {
     this.registeredExtensions.clear();
   }
 
-  /**
-   * re-register all extensions after settings change.
-   * unregisters old mappings first to avoid conflicts.
-   */
   async refreshMappings() {
     this.unregisterAllExtensions();
+    this.registrationErrors = {};
     this.registerAllExtensions();
   }
 }

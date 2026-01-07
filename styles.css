@@ -1,52 +1,55 @@
 .any-file-settings {
-  max-width: 600px;
+  max-width: 700px;
 }
 
-.any-file-table-container {
-  margin-bottom: 1em;
-  max-height: 400px;
-  overflow-y: auto;
+.any-file-settings .setting-item {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  grid-template-rows: auto auto;
+  gap: 4px 12px;
+  align-items: start;
 }
 
-.any-file-table {
+.any-file-settings .setting-item-info {
+  min-width: 0;
+  grid-column: 1;
+  grid-row: 1 / span 2;
+}
+
+.any-file-settings .setting-item-control {
+  min-width: 0;
+  grid-column: 2;
+  grid-row: 1;
+  display: contents;
+}
+
+.any-file-ext-list {
   width: 100%;
-  border-collapse: collapse;
+  font-family: var(--font-monospace);
+  font-size: 0.85em;
+  grid-column: 2;
+  grid-row: 1;
 }
 
-.any-file-table th,
-.any-file-table td {
-  padding: 6px 8px;
+.any-file-hint {
+  font-size: 0.85em;
+  grid-column: 2;
+  grid-row: 2;
+  min-height: 1.2em;
   text-align: left;
-  border-bottom: 1px solid var(--background-modifier-border);
+  justify-self: start;
 }
 
-.any-file-table th {
-  font-weight: 600;
-  position: sticky;
-  top: 0;
-  background: var(--background-primary);
+.any-file-input-error {
+  border-color: var(--text-error) !important;
+  box-shadow: 0 0 0 1px var(--text-error) !important;
 }
 
-.any-file-ext-input {
-  width: 100%;
-  max-width: 120px;
+.any-file-hint-warning {
+  color: var(--text-warning);
 }
 
-.any-file-view-select {
-  width: 100%;
-  max-width: 150px;
-}
-
-.any-file-delete-btn {
-  background: transparent;
-  border: none;
-  color: var(--text-muted);
-  cursor: pointer;
-  font-size: 1.2em;
-  padding: 2px 8px;
-}
-
-.any-file-delete-btn:hover {
+.any-file-hint-error {
   color: var(--text-error);
 }
 

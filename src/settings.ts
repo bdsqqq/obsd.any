@@ -1,6 +1,6 @@
 import { App, PluginSettingTab, Setting } from "obsidian";
 import AnyFilePlugin from "./main";
-import { DEFAULT_MAPPINGS, PROTECTED_EXTENSIONS } from "./defaults";
+import { DEFAULT_MAPPINGS, OBSIDIAN_HANDLED_EXTENSIONS } from "./defaults";
 
 const PANEL_VIEWS = [
   "graph",
@@ -31,39 +31,15 @@ export class AnyFileSettingTab extends PluginSettingTab {
     containerEl.createEl("h2", { text: ".any" });
 
     const fileViewTypes = this.getFileViewTypes();
+    const grouped = this.groupByViewType();
 
-    // mappings table
-    const tableContainer = containerEl.createDiv({
-      cls: "any-file-table-container",
-    });
-
-    const table = tableContainer.createEl("table", { cls: "any-file-table" });
-    const thead = table.createEl("thead");
-    const headerRow = thead.createEl("tr");
-    headerRow.createEl("th", { text: "extension" });
-    headerRow.createEl("th", { text: "view type" });
-    headerRow.createEl("th", { text: "" });
-
-    const tbody = table.createEl("tbody");
-
-    const mappings = this.plugin.settings.mappings;
-    const sortedExtensions = Object.keys(mappings).sort();
-
-    for (const ext of sortedExtensions) {
-      this.renderMappingRow(tbody, ext, mappings[ext], fileViewTypes);
+    for (const viewType of fileViewTypes) {
+      const extensions = grouped[viewType] || [];
+      this.renderViewTypeSetting(containerEl, viewType, extensions);
     }
 
-    // add new mapping button
-    new Setting(containerEl)
-      .setName("add mapping")
-      .setDesc("map a new extension to a view type")
-      .addButton((btn) =>
-        btn.setButtonText("+ add").onClick(() => {
-          this.addNewMapping(tbody, fileViewTypes);
-        })
-      );
+    this.renderObsidianDefaultsSetting(containerEl);
 
-    // reset to defaults
     new Setting(containerEl)
       .setName("reset to defaults")
       .setDesc("restore all mappings to default values")
@@ -77,6 +53,7 @@ export class AnyFileSettingTab extends PluginSettingTab {
             );
             if (confirmed) {
               this.plugin.settings.mappings = { ...DEFAULT_MAPPINGS };
+              this.plugin.settings.obsidianDefaults = [...OBSIDIAN_HANDLED_EXTENSIONS];
               await this.plugin.saveSettings();
               await this.plugin.refreshMappings();
               this.display();
@@ -84,22 +61,6 @@ export class AnyFileSettingTab extends PluginSettingTab {
           })
       );
 
-    // protect defaults toggle
-    new Setting(containerEl)
-      .setName("protect default extensions")
-      .setDesc(
-        "warn before overriding obsidian's built-in extensions (.md, .canvas, .pdf, etc.)"
-      )
-      .addToggle((toggle) =>
-        toggle
-          .setValue(this.plugin.settings.protectDefaults)
-          .onChange(async (value) => {
-            this.plugin.settings.protectDefaults = value;
-            await this.plugin.saveSettings();
-          })
-      );
-
-    // show registration errors if any
     if (Object.keys(this.plugin.registrationErrors).length > 0) {
       containerEl.createEl("h3", { text: "registration errors" });
       const errorList = containerEl.createEl("ul", { cls: "any-file-errors" });
@@ -117,96 +78,193 @@ export class AnyFileSettingTab extends PluginSettingTab {
     return allTypes.filter((t) => !PANEL_VIEWS.includes(t)).sort();
   }
 
-  private renderMappingRow(
-    tbody: HTMLElement,
-    ext: string,
-    viewType: string,
-    fileViewTypes: string[]
-  ): void {
-    const row = tbody.createEl("tr");
+  private groupByViewType(): Record<string, string[]> {
+    const grouped: Record<string, string[]> = {};
+    for (const [ext, viewType] of Object.entries(this.plugin.settings.mappings)) {
+      if (!grouped[viewType]) grouped[viewType] = [];
+      grouped[viewType].push(ext);
+    }
+    for (const viewType of Object.keys(grouped)) {
+      grouped[viewType].sort();
+    }
+    return grouped;
+  }
 
-    // extension cell
-    const extCell = row.createEl("td");
-    const extInput = extCell.createEl("input", {
-      type: "text",
-      value: ext,
-      cls: "any-file-ext-input",
-    });
-    extInput.addEventListener("change", async () => {
-      const newExt = extInput.value.toLowerCase().replace(/^\./, "").trim();
-      if (newExt && newExt !== ext) {
-        if (this.shouldProtect(newExt)) {
-          const confirmed = confirm(
-            `.${newExt} is a protected obsidian extension. override anyway?`
-          );
-          if (!confirmed) {
-            extInput.value = ext;
-            return;
+  private renderViewTypeSetting(
+    containerEl: HTMLElement,
+    viewType: string,
+    extensions: string[]
+  ): void {
+    const setting = new Setting(containerEl)
+      .setName(viewType)
+      .setDesc("");
+
+    let errorEl: HTMLElement | null = null;
+
+    setting.addText((text) => {
+      text
+        .setPlaceholder("txt, log, json, ...")
+        .setValue(extensions.join(", "));
+
+      text.inputEl.addClass("any-file-ext-list");
+
+      errorEl = setting.controlEl.createEl("div", { cls: "any-file-hint" });
+
+      text.inputEl.addEventListener("input", () => {
+        const value = text.getValue();
+        const result = this.parseAndValidate(value, viewType);
+        
+        if (result.errors.length > 0) {
+          text.inputEl.addClass("any-file-input-error");
+          if (errorEl) {
+            errorEl.empty();
+            errorEl.addClass("any-file-hint-error");
+            for (const err of result.errors) {
+              errorEl.createEl("div", { text: err });
+            }
+          }
+        } else {
+          text.inputEl.removeClass("any-file-input-error");
+          if (errorEl) {
+            errorEl.empty();
+            errorEl.removeClass("any-file-hint-error");
           }
         }
-        delete this.plugin.settings.mappings[ext];
-        this.plugin.settings.mappings[newExt] = viewType;
+      });
+
+      text.inputEl.addEventListener("blur", async () => {
+        const value = text.getValue();
+        const result = this.parseAndValidate(value, viewType);
+        
+        if (result.errors.length === 0) {
+          await this.applyExtensions(viewType, result.extensions);
+          this.display();
+        }
+      });
+    });
+  }
+
+  private renderObsidianDefaultsSetting(containerEl: HTMLElement): void {
+    const currentDefaults = this.plugin.settings.obsidianDefaults;
+    const removed = OBSIDIAN_HANDLED_EXTENSIONS.filter(
+      (ext) => !currentDefaults.includes(ext)
+    );
+
+    const setting = new Setting(containerEl)
+      .setName("use obsidian's native behaviour for")
+      .setDesc("");
+
+    let hintEl: HTMLElement | null = null;
+
+    setting.addText((text) => {
+      text
+        .setPlaceholder("md, pdf, png, ...")
+        .setValue(currentDefaults.join(", "));
+
+      text.inputEl.addClass("any-file-ext-list");
+
+      hintEl = setting.controlEl.createEl("div", { cls: "any-file-hint" });
+      this.updateHint(hintEl, removed);
+
+      text.inputEl.addEventListener("input", () => {
+        const value = text.getValue();
+        const parsed = this.parseExtensionList(value);
+        const nowRemoved = OBSIDIAN_HANDLED_EXTENSIONS.filter(
+          (ext) => !parsed.includes(ext)
+        );
+        if (hintEl) this.updateHint(hintEl, nowRemoved);
+      });
+
+      text.inputEl.addEventListener("blur", async () => {
+        const value = text.getValue();
+        const parsed = this.parseExtensionList(value);
+        this.plugin.settings.obsidianDefaults = parsed;
         await this.plugin.saveSettings();
         await this.plugin.refreshMappings();
         this.display();
+      });
+    });
+  }
+
+  private updateHint(hintEl: HTMLElement, removed: string[]): void {
+    if (removed.length > 0) {
+      hintEl.addClass("any-file-hint-warning");
+      hintEl.setText(
+        `└ you're NOT using obsidian's native behaviour for ${removed.map((e) => `.${e}`).join(", ")}`
+      );
+    } else {
+      hintEl.removeClass("any-file-hint-warning");
+      hintEl.setText("");
+    }
+  }
+
+  private parseExtensionList(value: string): string[] {
+    return value
+      .split(/[,\s]+/)
+      .map((s) => s.toLowerCase().replace(/^\./, "").trim())
+      .filter((s) => s.length > 0);
+  }
+
+  private parseAndValidate(
+    value: string,
+    currentViewType: string
+  ): { extensions: string[]; errors: string[] } {
+    const extensions: string[] = [];
+    const errors: string[] = [];
+
+    const raw = this.parseExtensionList(value);
+    const seen = new Set<string>();
+
+    for (const ext of raw) {
+      if (seen.has(ext)) {
+        errors.push(`duplicate: .${ext}`);
+        continue;
       }
-    });
+      seen.add(ext);
 
-    // view type cell
-    const viewCell = row.createEl("td");
-    const select = viewCell.createEl("select", { cls: "any-file-view-select" });
-    for (const vt of fileViewTypes) {
-      const option = select.createEl("option", { value: vt, text: vt });
-      if (vt === viewType) option.selected = true;
-    }
-    // if current viewType not in list (maybe from old config), add it
-    if (!fileViewTypes.includes(viewType)) {
-      const option = select.createEl("option", { value: viewType, text: viewType });
-      option.selected = true;
-    }
-    select.addEventListener("change", async () => {
-      this.plugin.settings.mappings[ext] = select.value;
-      await this.plugin.saveSettings();
-      await this.plugin.refreshMappings();
-    });
+      if (this.isObsidianDefault(ext)) {
+        errors.push(`.${ext} is in obsidian defaults`);
+        continue;
+      }
 
-    // delete cell
-    const delCell = row.createEl("td");
-    const delBtn = delCell.createEl("button", {
-      text: "×",
-      cls: "any-file-delete-btn",
-    });
-    delBtn.addEventListener("click", async () => {
+      const conflict = this.findConflict(ext, currentViewType);
+      if (conflict) {
+        errors.push(`.${ext} in ${conflict}`);
+        continue;
+      }
+
+      extensions.push(ext);
+    }
+
+    return { extensions, errors };
+  }
+
+  private isObsidianDefault(ext: string): boolean {
+    return this.plugin.settings.obsidianDefaults.includes(ext.toLowerCase());
+  }
+
+  private findConflict(ext: string, currentViewType: string): string | null {
+    const existingViewType = this.plugin.settings.mappings[ext];
+    if (existingViewType && existingViewType !== currentViewType) {
+      return existingViewType;
+    }
+    return null;
+  }
+
+  private async applyExtensions(viewType: string, newExtensions: string[]): Promise<void> {
+    const oldExtensions = Object.entries(this.plugin.settings.mappings)
+      .filter(([_, vt]) => vt === viewType)
+      .map(([ext, _]) => ext);
+
+    for (const ext of oldExtensions) {
       delete this.plugin.settings.mappings[ext];
-      await this.plugin.saveSettings();
-      await this.plugin.refreshMappings();
-      row.remove();
-    });
-  }
-
-  private addNewMapping(tbody: HTMLElement, fileViewTypes: string[]): void {
-    const ext = "newext";
-    const viewType = "markdown";
-
-    if (this.plugin.settings.mappings[ext]) {
-      // find unique name
-      let counter = 1;
-      while (this.plugin.settings.mappings[`${ext}${counter}`]) {
-        counter++;
-      }
-      this.plugin.settings.mappings[`${ext}${counter}`] = viewType;
-      this.plugin.saveSettings().then(() => this.display());
-      return;
     }
 
-    this.plugin.settings.mappings[ext] = viewType;
-    this.plugin.saveSettings().then(() => this.display());
-  }
+    for (const ext of newExtensions) {
+      this.plugin.settings.mappings[ext] = viewType;
+    }
 
-  private shouldProtect(ext: string): boolean {
-    return (
-      this.plugin.settings.protectDefaults &&
-      PROTECTED_EXTENSIONS.includes(ext.toLowerCase())
-    );
+    await this.plugin.saveSettings();
+    await this.plugin.refreshMappings();
   }
 }

@@ -1,8 +1,6 @@
 export const DEFAULT_MAPPINGS: Record<string, string> = {
   // plain text
-  txt: "markdown",
   text: "markdown",
-  log: "markdown",
 
   // markup
   rst: "markdown",
@@ -16,19 +14,11 @@ export const DEFAULT_MAPPINGS: Record<string, string> = {
   mdx: "markdown",
 
   // code - javascript ecosystem
-  js: "markdown",
   mjs: "markdown",
   cjs: "markdown",
-  ts: "markdown",
-  tsx: "markdown",
-  jsx: "markdown",
 
   // code - web
-  html: "markdown",
   htm: "markdown",
-  css: "markdown",
-  scss: "markdown",
-  sass: "markdown",
   less: "markdown",
 
   // code - systems
@@ -58,11 +48,8 @@ export const DEFAULT_MAPPINGS: Record<string, string> = {
   groovy: "markdown",
 
   // data/config
-  json: "markdown",
   jsonc: "markdown",
   json5: "markdown",
-  yaml: "markdown",
-  yml: "markdown",
   toml: "markdown",
   xml: "markdown",
   ini: "markdown",
@@ -100,10 +87,13 @@ export const DEFAULT_MAPPINGS: Record<string, string> = {
   tif: "image",
 };
 
-export const PROTECTED_EXTENSIONS = [
+// extensions obsidian already handles - we defer to obsidian by default
+export const OBSIDIAN_HANDLED_EXTENSIONS = [
+  // core obsidian
   "md",
   "canvas",
   "pdf",
+  // images
   "png",
   "jpg",
   "jpeg",
@@ -112,15 +102,31 @@ export const PROTECTED_EXTENSIONS = [
   "webp",
   "bmp",
   "avif",
+  // audio
   "mp3",
   "wav",
   "m4a",
   "ogg",
   "flac",
+  // video
   "webm",
   "3gp",
   "mp4",
   "mkv",
   "mov",
   "ogv",
+  // obsidian also registers these (discovered via errors)
+  "css",
+  "html",
+  "js",
+  "json",
+  "jsx",
+  "log",
+  "sass",
+  "scss",
+  "ts",
+  "tsx",
+  "txt",
+  "yaml",
+  "yml",
 ];
