@@ -8,7 +8,7 @@ maps file extensions to obsidian's built-in views (markdown, image, audio, video
 
 ## features
 
-- **65 default mappings** for common file types (code, configs, text, media)
+- **61 default mappings** for common file types (code, configs, text, media)
 - **settings UI** with per-view-type extension lists
 - **dynamic view discovery** - works with views from other plugins too
 - **protected extensions** - warns before overriding .md, .canvas, etc.
@@ -29,7 +29,7 @@ note: obsidian natively handles `.txt`, `.js`, `.ts`, `.jsx`, `.tsx`, `.json`, `
 ## usage
 
 1. install the plugin
-2. open settings → any-file
+2. open settings → .any
 3. add/edit/remove extension mappings as needed
 4. changes apply immediately (no restart needed)
 
@@ -37,8 +37,7 @@ note: obsidian natively handles `.txt`, `.js`, `.ts`, `.jsx`, `.tsx`, `.json`, `
 
 | option | description |
 |--------|-------------|
-| extension → view type table | edit mappings directly |
-| add mapping | create new extension mapping |
+| per-view-type extension lists | text inputs for each available view type (markdown, image, audio, video, pdf, canvas). edit comma-separated extensions directly. |
 | reset to defaults | restore all mappings to defaults |
 | use obsidian's native behavior | defer to obsidian for extensions it already handles (`.txt`, `.js`, `.ts`, etc.). when enabled, the plugin skips registering these. |
 
