@@ -28,7 +28,7 @@ export class AnyFileSettingTab extends PluginSettingTab {
     containerEl.empty();
     containerEl.addClass("any-file-settings");
 
-    containerEl.createEl("h2", { text: ".any" });
+    new Setting(containerEl).setName(".any").setHeading();
 
     const fileViewTypes = this.getFileViewTypes();
     const grouped = this.groupByViewType();
@@ -41,39 +41,35 @@ export class AnyFileSettingTab extends PluginSettingTab {
     this.renderObsidianDefaultsSetting(containerEl);
 
     new Setting(containerEl)
-      .setName("reset to defaults")
-      .setDesc("restore all mappings to default values")
+      .setName("Reset to defaults")
+      .setDesc("Restore all mappings to default values")
       .addButton((btn) =>
         btn
-          .setButtonText("reset")
+          .setButtonText("Reset")
           .setWarning()
-          .onClick(async () => {
-            const confirmed = confirm(
-              "reset all mappings to defaults? this cannot be undone."
-            );
-            if (confirmed) {
-              this.plugin.settings.mappings = { ...DEFAULT_MAPPINGS };
-              this.plugin.settings.obsidianDefaults = [...OBSIDIAN_HANDLED_EXTENSIONS];
-              await this.plugin.saveSettings();
-              await this.plugin.refreshMappings();
-              this.display();
-            }
+          .onClick(() => {
+            this.plugin.settings.mappings = { ...DEFAULT_MAPPINGS };
+            this.plugin.settings.obsidianDefaults = [...OBSIDIAN_HANDLED_EXTENSIONS];
+            void this.plugin.saveSettings();
+            this.plugin.syncRegistrations();
+            this.display();
           })
       );
 
     if (Object.keys(this.plugin.registrationErrors).length > 0) {
-      containerEl.createEl("h3", { text: "registration errors" });
-      const errorList = containerEl.createEl("ul", { cls: "any-file-errors" });
+      new Setting(containerEl).setName("Registration errors").setHeading();
       for (const [ext, error] of Object.entries(
         this.plugin.registrationErrors
       )) {
-        errorList.createEl("li", { text: `.${ext}: ${error}` });
+        new Setting(containerEl).setName(`.${ext}`).setDesc(error);
       }
     }
   }
 
   private getFileViewTypes(): string[] {
-    // @ts-expect-error - viewRegistry.viewByType is private
+    // @ts-expect-error - viewRegistry.viewByType is private obsidian API.
+    // obsidian doesn't expose registered view types publicly. this is the only
+    // way to enumerate them for the settings UI dropdown.
     const allTypes = Object.keys(this.app.viewRegistry.viewByType);
     return allTypes.filter((t) => !PANEL_VIEWS.includes(t)).sort();
   }
@@ -132,13 +128,14 @@ export class AnyFileSettingTab extends PluginSettingTab {
         }
       });
 
-      text.inputEl.addEventListener("blur", async () => {
+      text.inputEl.addEventListener("blur", () => {
         const value = text.getValue();
         const result = this.parseAndValidate(value, viewType);
         
         if (result.errors.length === 0) {
-          await this.applyExtensions(viewType, result.extensions);
-          this.display();
+          void this.applyExtensions(viewType, result.extensions).then(() => {
+            this.display();
+          });
         }
       });
     });
@@ -151,7 +148,7 @@ export class AnyFileSettingTab extends PluginSettingTab {
     );
 
     const setting = new Setting(containerEl)
-      .setName("use obsidian's native behaviour for")
+      .setName("Use Obsidian's native behavior for")
       .setDesc("");
 
     let hintEl: HTMLElement | null = null;
@@ -175,12 +172,12 @@ export class AnyFileSettingTab extends PluginSettingTab {
         if (hintEl) this.updateHint(hintEl, nowRemoved);
       });
 
-      text.inputEl.addEventListener("blur", async () => {
+      text.inputEl.addEventListener("blur", () => {
         const value = text.getValue();
         const parsed = this.parseExtensionList(value);
         this.plugin.settings.obsidianDefaults = parsed;
-        await this.plugin.saveSettings();
-        await this.plugin.refreshMappings();
+        void this.plugin.saveSettings();
+        this.plugin.syncRegistrations();
         this.display();
       });
     });
@@ -190,7 +187,7 @@ export class AnyFileSettingTab extends PluginSettingTab {
     if (removed.length > 0) {
       hintEl.addClass("any-file-hint-warning");
       hintEl.setText(
-        `└ you're NOT using obsidian's native behaviour for ${removed.map((e) => `.${e}`).join(", ")}`
+        `You're not using Obsidian's native behavior for ${removed.map((e) => `.${e}`).join(", ")}`
       );
     } else {
       hintEl.removeClass("any-file-hint-warning");
@@ -273,6 +270,6 @@ export class AnyFileSettingTab extends PluginSettingTab {
     }
 
     await this.plugin.saveSettings();
-    await this.plugin.refreshMappings();
+    await this.plugin.syncRegistrations();
   }
 }

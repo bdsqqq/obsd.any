@@ -1,5 +1,5 @@
 import { Plugin } from "obsidian";
-import { AnyFileSettings } from "./types";
+import { AnyFileSettings, Extension, ViewType } from "./types";
 import { DEFAULT_MAPPINGS, OBSIDIAN_HANDLED_EXTENSIONS } from "./defaults";
 import { AnyFileSettingTab } from "./settings";
 
@@ -13,8 +13,8 @@ const DEFAULT_SETTINGS: AnyFileSettings = {
 
 export default class AnyFilePlugin extends Plugin {
   settings: AnyFileSettings = DEFAULT_SETTINGS;
-  registeredExtensions: Set<string> = new Set();
-  registrationErrors: Record<string, string> = {};
+  registeredExtensions: Set<Extension> = new Set();
+  registrationErrors: Record<Extension, string> = {};
 
   async onload() {
     await this.loadSettings();
@@ -56,7 +56,7 @@ export default class AnyFilePlugin extends Plugin {
     }
   }
 
-  registerSingleExtension(ext: string, viewType: string) {
+  registerSingleExtension(ext: Extension, viewType: ViewType) {
     try {
       this.registerExtensions([ext], viewType);
       this.registeredExtensions.add(ext);
@@ -76,14 +76,14 @@ export default class AnyFilePlugin extends Plugin {
         // internal ViewRegistry class. without this, extensions stay registered until
         // obsidian restarts, breaking the refresh-on-settings-change flow.
         this.app.viewRegistry.unregisterExtensions([ext]);
-      } catch (e) {
+      } catch {
         console.warn(`any-file: failed to unregister .${ext}`);
       }
     }
     this.registeredExtensions.clear();
   }
 
-  async refreshMappings() {
+  syncRegistrations() {
     this.unregisterAllExtensions();
     this.registrationErrors = {};
     this.registerAllExtensions();
