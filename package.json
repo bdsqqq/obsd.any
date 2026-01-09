@@ -1,6 +1,6 @@
 {
   "name": "obsd-dot-any",
-  "version": "1.2.5",
+  "version": "1.2.6",
   "description": "Map any file extension to any view.",
   "main": "main.js",
   "scripts": {

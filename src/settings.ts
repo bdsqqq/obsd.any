@@ -99,7 +99,8 @@ export class AnyFileSettingTab extends PluginSettingTab {
 
     setting.addText((text) => {
       text
-        .setPlaceholder("File extensions")
+        // eslint-disable-next-line obsidianmd/ui/sentence-case -- file extension examples
+        .setPlaceholder("txt, log, json, ...")
         .setValue(extensions.join(", "));
 
       text.inputEl.addClass("any-file-ext-list");
@@ -155,7 +156,8 @@ export class AnyFileSettingTab extends PluginSettingTab {
 
     setting.addText((text) => {
       text
-        .setPlaceholder("File extensions")
+        // eslint-disable-next-line obsidianmd/ui/sentence-case -- file extension examples
+        .setPlaceholder("md, pdf, png, ...")
         .setValue(currentDefaults.join(", "));
 
       text.inputEl.addClass("any-file-ext-list");
