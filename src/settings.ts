@@ -28,7 +28,7 @@ export class AnyFileSettingTab extends PluginSettingTab {
     containerEl.empty();
     containerEl.addClass("any-file-settings");
 
-    new Setting(containerEl).setName(".any").setHeading();
+    new Setting(containerEl).setName("Extension mappings").setHeading();
 
     const fileViewTypes = this.getFileViewTypes();
     const grouped = this.groupByViewType();
@@ -41,7 +41,7 @@ export class AnyFileSettingTab extends PluginSettingTab {
     this.renderObsidianDefaultsSetting(containerEl);
 
     new Setting(containerEl)
-      .setName("Reset to defaults")
+      .setName("Reset to default mappings")
       .setDesc("Restore all mappings to default values")
       .addButton((btn) =>
         btn
@@ -228,7 +228,7 @@ export class AnyFileSettingTab extends PluginSettingTab {
       seen.add(ext);
 
       if (this.isObsidianDefault(ext)) {
-        errors.push(`.${ext} is in obsidian defaults`);
+        errors.push(`.${ext} is in Obsidian defaults`);
         continue;
       }
 
@@ -270,6 +270,6 @@ export class AnyFileSettingTab extends PluginSettingTab {
     }
 
     await this.plugin.saveSettings();
-    await this.plugin.syncRegistrations();
+    this.plugin.syncRegistrations();
   }
 }
