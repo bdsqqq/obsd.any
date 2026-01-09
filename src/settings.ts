@@ -222,7 +222,7 @@ export class AnyFileSettingTab extends PluginSettingTab {
       }
 
       if (seen.has(ext)) {
-        errors.push(`duplicate: .${ext}`);
+        errors.push(`Duplicate: .${ext}`);
         continue;
       }
       seen.add(ext);
@@ -234,7 +234,7 @@ export class AnyFileSettingTab extends PluginSettingTab {
 
       const conflict = this.findConflict(ext, currentViewType);
       if (conflict) {
-        errors.push(`.${ext} in ${conflict}`);
+        errors.push(`.${ext} already mapped to ${conflict}`);
         continue;
       }
 
