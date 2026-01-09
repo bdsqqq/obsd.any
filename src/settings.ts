@@ -99,7 +99,7 @@ export class AnyFileSettingTab extends PluginSettingTab {
 
     setting.addText((text) => {
       text
-        .setPlaceholder("txt, log, json, ...")
+        .setPlaceholder("File extensions")
         .setValue(extensions.join(", "));
 
       text.inputEl.addClass("any-file-ext-list");
@@ -155,7 +155,7 @@ export class AnyFileSettingTab extends PluginSettingTab {
 
     setting.addText((text) => {
       text
-        .setPlaceholder("md, pdf, png, ...")
+        .setPlaceholder("File extensions")
         .setValue(currentDefaults.join(", "));
 
       text.inputEl.addClass("any-file-ext-list");
