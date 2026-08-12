@@ -2,6 +2,9 @@
   "name": "obsd-dot-any",
   "version": "1.2.7",
   "description": "Map any file extension to any view.",
+  "engines": {
+    "node": "22.x"
+  },
   "main": "main.js",
   "scripts": {
     "dev": "node esbuild.config.mjs",
